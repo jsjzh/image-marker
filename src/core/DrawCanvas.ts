@@ -2,22 +2,18 @@ import Canvas from './Canvas';
 import EventStore from './EventStore';
 import ImageCanvas from './ImageCanvas';
 
-type func = Function;
-export type IPoint = [number, number];
-export type IDrawType = 'rect' | 'polygon';
-
 class MarkCanvas extends Canvas {
   public image: ImageCanvas;
-  public viewInfos: Image.IViewInfos;
   /**
    * 实际绘制的时候用的 paths 路径点
    * @memberof MarkCanvas
    */
   public showStore: Draw.IPath[];
   public config: Draw.IConfig;
+  public status: Draw.IStatus;
+  public viewInfos: Image.IViewInfos;
   public drawInfos: Draw.IDrawInfos;
   public shiftInfos: Draw.IShiftInfos;
-  public status: Draw.IStatus;
   public bindStatus: Draw.IBindStatus;
   public handler: any;
 
@@ -121,7 +117,7 @@ class MarkCanvas extends Canvas {
     this.showStore = paths;
   }
 
-  public setDrawType(type: IDrawType) {
+  public setDrawType(type: Draw.IDrawType) {
     this.config.drawType = type;
   }
 
@@ -221,7 +217,7 @@ class MarkCanvas extends Canvas {
 
     this.shiftInfos.tempStore = this.showStore.map((path: Draw.IPath) => ({
       ...path,
-      points: path.points.map((point: IPoint) => [
+      points: path.points.map((point: Draw.IPoint) => [
         point[0] + offsetX,
         point[1] + offsetY,
       ]),
@@ -244,7 +240,7 @@ class MarkCanvas extends Canvas {
 
     let tempStore = this.showStore.map((path: Draw.IPath) => ({
       ...path,
-      points: path.points.map((point: IPoint) => [
+      points: path.points.map((point: Draw.IPoint) => [
         // 稍微解释一下，这个地方因为画的框是以 draw 层画布最左上角为基础的
         // 但是我们要的是以 view 层最左上角（以后希望改成鼠标焦点缩放）为零点缩放
         point[0] * rate - (rate - 1) * this.viewInfos.x,
@@ -396,8 +392,8 @@ class MarkCanvas extends Canvas {
     };
   }
   public getPolygonPath(
-    prePoints: IPoint[] | [],
-    nextPoint: IPoint,
+    prePoints: Draw.IPoint[] | [],
+    nextPoint: Draw.IPoint,
   ): Draw.IPath {
     // 所有的图形都遵照顺时针方向标注 point 点
     return {
@@ -421,7 +417,9 @@ class MarkCanvas extends Canvas {
 
     this.ctx.beginPath();
     this.ctx.moveTo.apply(this.ctx, startPoint);
-    tempPoints.forEach((path: IPoint) => this.ctx.lineTo.apply(this.ctx, path));
+    tempPoints.forEach((path: Draw.IPoint) =>
+      this.ctx.lineTo.apply(this.ctx, path),
+    );
     this.ctx.closePath();
     this.ctx.stroke();
 
@@ -450,7 +448,7 @@ class MarkCanvas extends Canvas {
     // showStore 是专门展示给界面看的，所以说当图片缩放以及移动的时候
     return this.showStore.map((path: Draw.IPath) => ({
       ...path,
-      points: path.points.map((points: IPoint) => [
+      points: path.points.map((points: Draw.IPoint) => [
         (points[0] - this.viewInfos.x) / this.viewInfos.scale,
         (points[1] - this.viewInfos.y) / this.viewInfos.scale,
       ]),
