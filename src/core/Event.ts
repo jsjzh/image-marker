@@ -1,5 +1,9 @@
 class Event {
-  private _events: E.IEvnets;
+  /**
+   * @private
+   * @memberof Event
+   */
+  private _events: Event.IEvnets;
 
   public constructor() {
     this._events = {};
@@ -9,6 +13,7 @@ class Event {
    * 声明事件监听
    * @param key 事件名称
    * @param func 被触发的函数
+   * @memberof Event
    */
   public on(key: string, func: IFn): void {
     if (Array.isArray(this._events[key])) {
@@ -23,6 +28,7 @@ class Event {
    * 触发某一事件下所有函数
    * @param key 想要触发的事件名称
    * @param arg 被触发的函数们会传入的参数
+   * @memberof Event
    */
   public emit(key: string, ...arg: any[]): void {
     const args = Array.prototype.slice.call(arguments, 1);
@@ -37,6 +43,7 @@ class Event {
   /**
    * 删除某一事件的所有执行函数
    * @param key 事件名称
+   * @memberof Event
    */
   public remove(key: string): void {
     delete this._events[key];
@@ -44,6 +51,7 @@ class Event {
 
   /**
    * 删除所有的监听
+   * @memberof Event
    */
   public removeAll(): void {
     Object.keys(this._events).forEach(key => delete this._events[key]);

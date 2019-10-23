@@ -5,60 +5,20 @@ import ImageCanvas from './ImageCanvas';
 type func = Function;
 export type IPoint = [number, number];
 export type IDrawType = 'rect' | 'polygon';
-export interface IStyle {
-  width?: number | string;
-  color?: string;
-  shadow?: string;
-}
-export interface IPath {
-  pathKey: string;
-  type: string;
-  styles: IStyle;
-  points: any[];
-}
 
 class MarkCanvas extends Canvas {
   public image: ImageCanvas;
-  public viewInfos: ImageCanvas['viewInfos'];
-  // 实际绘制的时候用的 paths 路径点
-  public showStore: IPath[];
-  public config: {
-    styles: IStyle;
-    drawType: IDrawType;
-    scaleMax: number;
-    scaleMin: number;
-    scaleStep: number;
-  };
-  public drawInfos: {
-    startDrawX: number;
-    startDrawY: number;
-    path: IPath;
-    clear: func;
-  };
-  public shiftInfos: {
-    startShiftX: number;
-    startShiftY: number;
-    // 在鼠标拖动的时候坐标的点改变了，需要一个临时存储处
-    // 在放开鼠标之后把这些赋值给 showStore
-    tempStore: IPath[];
-    clear: func;
-  };
-  public status: {
-    mouseDownShift: boolean;
-    // 针对的是持续性的画法，比如正方形，摁住鼠标来画的
-    mouseDownDraw: boolean;
-    // 针对的是持续性的画法，比如正方形，摁住鼠标来画的
-    // 然后下次点击的时候再画下一个点，并不是持续性的
-    mouseDownDuring: boolean;
-    ctrlDown: boolean;
-  };
-  // 该对象的作用是可以参考 keyboardEvent，因为只要摁着键盘，就会一直触发事件
-  public bindStatus: {
-    scaleBind: boolean;
-    shiftBind: boolean;
-    drawBind: boolean;
-    keyboardBind: boolean;
-  };
+  public viewInfos: Image.IViewInfos;
+  /**
+   * 实际绘制的时候用的 paths 路径点
+   * @memberof MarkCanvas
+   */
+  public showStore: Draw.IPath[];
+  public config: Draw.IConfig;
+  public drawInfos: Draw.IDrawInfos;
+  public shiftInfos: Draw.IShiftInfos;
+  public status: Draw.IStatus;
+  public bindStatus: Draw.IBindStatus;
   public handler: any;
 
   public constructor(
@@ -157,7 +117,7 @@ class MarkCanvas extends Canvas {
     this.setConfigStyle();
   }
 
-  public reloadImage(paths: IPath[]) {
+  public reloadImage(paths: Draw.IPath[]) {
     this.showStore = paths;
   }
 
@@ -165,7 +125,7 @@ class MarkCanvas extends Canvas {
     this.config.drawType = type;
   }
 
-  public setConfigStyle(config?: IStyle) {
+  public setConfigStyle(config?: Draw.IStyle) {
     let styles: any = config || this.config.styles;
     Object.keys(styles).forEach((key: any) => {
       styles[key] && this.setLineStyle(key, styles[key]);
@@ -259,7 +219,7 @@ class MarkCanvas extends Canvas {
     const offsetX = this.removeFrameX(e.clientX) - this.shiftInfos.startShiftX;
     const offsetY = this.removeFrameY(e.clientY) - this.shiftInfos.startShiftY;
 
-    this.shiftInfos.tempStore = this.showStore.map((path: IPath) => ({
+    this.shiftInfos.tempStore = this.showStore.map((path: Draw.IPath) => ({
       ...path,
       points: path.points.map((point: IPoint) => [
         point[0] + offsetX,
@@ -269,7 +229,9 @@ class MarkCanvas extends Canvas {
 
     this.clear();
 
-    this.shiftInfos.tempStore.forEach((path: IPath) => this.drawPath(path));
+    this.shiftInfos.tempStore.forEach((path: Draw.IPath) =>
+      this.drawPath(path),
+    );
   }
   public shiftEnd(e: MouseEvent) {
     this.showStore = this.shiftInfos.tempStore;
@@ -280,7 +242,7 @@ class MarkCanvas extends Canvas {
     let rate =
       direction === 'up' ? 1 / this.config.scaleStep : this.config.scaleStep;
 
-    let tempStore = this.showStore.map((path: IPath) => ({
+    let tempStore = this.showStore.map((path: Draw.IPath) => ({
       ...path,
       points: path.points.map((point: IPoint) => [
         // 稍微解释一下，这个地方因为画的框是以 draw 层画布最左上角为基础的
@@ -292,7 +254,7 @@ class MarkCanvas extends Canvas {
 
     this.clear();
 
-    tempStore.forEach((path: IPath) => this.drawPath(path));
+    tempStore.forEach((path: Draw.IPath) => this.drawPath(path));
 
     this.showStore = tempStore;
   }
@@ -415,7 +377,7 @@ class MarkCanvas extends Canvas {
     y: number,
     width: number,
     height: number,
-  ): IPath {
+  ): Draw.IPath {
     // 所有的图形都遵照顺时针方向标注 point 点
     return {
       pathKey: `type-rect-${Number(new Date())}`,
@@ -433,7 +395,10 @@ class MarkCanvas extends Canvas {
       ],
     };
   }
-  public getPolygonPath(prePoints: IPoint[] | [], nextPoint: IPoint): IPath {
+  public getPolygonPath(
+    prePoints: IPoint[] | [],
+    nextPoint: IPoint,
+  ): Draw.IPath {
     // 所有的图形都遵照顺时针方向标注 point 点
     return {
       pathKey: `type-polygon-${Number(new Date())}`,
@@ -447,7 +412,7 @@ class MarkCanvas extends Canvas {
     };
   }
 
-  public drawPath(paths: IPath): void {
+  public drawPath(paths: Draw.IPath): void {
     const { type, styles, points } = paths;
     this.setConfigStyle(styles);
 
@@ -483,7 +448,7 @@ class MarkCanvas extends Canvas {
     // 所以说当图片缩放以及移动该 store 都不会变
     // 只有在改变了图形的形状，或者删除某些线的时候会变化
     // showStore 是专门展示给界面看的，所以说当图片缩放以及移动的时候
-    return this.showStore.map((path: IPath) => ({
+    return this.showStore.map((path: Draw.IPath) => ({
       ...path,
       points: path.points.map((points: IPoint) => [
         (points[0] - this.viewInfos.x) / this.viewInfos.scale,
@@ -509,14 +474,14 @@ class MarkCanvas extends Canvas {
         let arr = _value.split(' ');
         if (arr.length && arr.length === 3) {
           that.ctx['shadowColor'] = arr[0];
-          that.ctx['shadowOffsetX'] = arr[1];
-          that.ctx['shadowOffsetY'] = arr[2];
+          that.ctx['shadowOffsetX'] = Number(arr[1]);
+          that.ctx['shadowOffsetY'] = Number(arr[2]);
         }
         if (arr.length && arr.length === 4) {
           that.ctx['shadowColor'] = arr[0];
-          that.ctx['shadowBlur'] = arr[1];
-          that.ctx['shadowOffsetX'] = arr[2];
-          that.ctx['shadowOffsetY'] = arr[3];
+          that.ctx['shadowBlur'] = Number(arr[1]);
+          that.ctx['shadowOffsetX'] = Number(arr[2]);
+          that.ctx['shadowOffsetY'] = Number(arr[3]);
         }
       },
     };

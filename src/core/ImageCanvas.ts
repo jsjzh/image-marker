@@ -8,9 +8,46 @@ import { loadImage } from '@/shared/utils';
  * @todo 做成鼠标放置位置放大缩小的样子
  */
 class ImageCanvas extends Canvas {
+  /**
+   * @member image 值为被处理的图片，是一个 HTMLImageElement
+   * @member width 表示图片的原始宽度
+   * @member height 表示图片的原始高度
+   * @member rate 表示图片的宽高比，宽 / 高
+   * @memberof ImageCanvas
+   */
   public imageInfos: Image.IImageInfos;
+  /**
+   * @member scaleMax 表示图片最多可以放大的倍率
+   * @member scaleMin 表示图片最小可以缩放的倍率
+   * @member scaleStep 表示图片每次放大的步长
+   * @memberof ImageCanvas
+   */
   public scaleInfos: Image.IScaleInfos;
+  /**
+   * 需要注意的是，由于图片可能是竖图或者横图，而工具初始化的时候会把图片全部展示，即
+   * 如果是长图，就会显示很小的图，头脚顶天
+   * 如果是宽图，就会左右顶边
+   * @member initWidth 该值为 canvas 初始宽度
+   * @member initHeight 该值为 canvas 初始高度
+   * @member initX 该值为 canvas 的初始 x 坐标
+   * @member initY 该值为 canvas 的初始 y 坐标
+   * @member width 该值为 canvas 当前宽度
+   * @member height 该值为 canvas 当前高度
+   * @member x 该值为 canvas 当前 x 坐标
+   * @member y 该值为 canvas 当前 y 坐标
+   * @member scale 该值为 canvas 的缩放倍率
+   * @memberof ImageCanvas
+   */
   public viewInfos: Image.IViewInfos;
+  /**
+   * 这里记录拖动图片时的相关数值，实现鼠标拖动，关键点是获取鼠标点下之后的偏移量，然后把这个值赋给图像
+   * 因为在 canvas 中，图像的移动是靠给予新的值并重绘得来的（需要新的 x 和 y 坐标）
+   * @member startX 鼠标按下之后的 x 坐标
+   * @member startY 鼠标按下之后的 y 坐标
+   * @member preX 鼠标按下之后，图像的 x 坐标
+   * @member preY 鼠标按下之后，图像的 y 坐标
+   * @memberof ImageCanvas
+   */
   public mouseMoveInfos: Image.IMouseMoveInfos;
 
   public constructor(ref: HTMLCanvasElement) {

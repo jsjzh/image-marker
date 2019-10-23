@@ -26,7 +26,7 @@ interface IConfig {
  * @todo 发现存在滚动条的时候，滚动滚动条也会导致画图位置不正确
  *
  * @todo 现在是这么样的想法，初始化的时候要给一个 url，表示初始的画布，另外还要给一个 loadImage 方法，重设画布
- * @todo 然后设置
+ * @todo 发现焦点在 canvas 的时候，浏览器还是会监听空格键（翻页），想办法把这个干掉
  */
 class ImageMarker extends Event {
   public config: IConfig;
@@ -68,6 +68,7 @@ class ImageMarker extends Event {
    * @param width 当前画笔宽度
    * @param color 当前画笔颜色
    * @param shadow 当前画笔阴影
+   * @memberof ImageMarker
    */
   public setDrawStyle({ drawType, width, color, shadow }: T.IDrawStyle) {
     drawType && this.drawCa.setDrawType(drawType);
@@ -78,6 +79,7 @@ class ImageMarker extends Event {
    * 设置某一条已经绘制的 path 的样式
    * @param key 创建 path 的时候唯一 key
    * @returns 返回被设置的那条 path，如果未设置成功则返回 false
+   * @memberof ImageMarker
    */
   public setPathStyle(key: T.IPathKey, { width, color, shadow }: T.IStyle) {
     const curr = this.drawCa.showStore.find(
@@ -97,6 +99,7 @@ class ImageMarker extends Event {
    * 删除某一条已经绘制的 path
    * @param key 创建 path 的时候唯一 key
    * @returns 返回被删除的那条 path，如果未删除成功则返回 false
+   * @memberof ImageMarker
    */
   public removePath(key: T.IPathKey) {
     const curr = this.drawCa.showStore.find(
@@ -117,12 +120,14 @@ class ImageMarker extends Event {
    * 选择（高亮）某一条已经绘制的 path
    * @param key 创建 path 的时候唯一 key
    * @returns 返回该 key 所对应的 path，若未找到则返回 null
+   * @memberof ImageMarker
    */
   public selectPath(key: T.IPathKey) {}
   /**
    * 重新计算当前的 image 层和 draw 层的高度，一般用在改变了 canvas 的实际高度的时候
    * 比如改变了 windows 的大小的时候，就需要调用该方法，该方法会重新计算 image 层的高度
    * 然后将已有的 paths 重新绘制
+   * @memberof ImageMarker
    */
   public resize(): void {
     // let tempPath = this.draw.showStore;
@@ -136,6 +141,7 @@ class ImageMarker extends Event {
   }
   /**
    * 返回当前的所有 paths
+   * @memberof ImageMarker
    */
   public getAllPaths() {
     return this.drawCa.getRelativeImagePaths();
@@ -143,6 +149,7 @@ class ImageMarker extends Event {
   /**
    * 直接对当前图片导入 paths，会重置当前的 image 层移动和缩放状态
    * @param paths 符合格式的 paths
+   * @memberof ImageMarker
    */
   public importPaths(paths: T.IPath[]) {
     // 导入的时候会重置已经移动或者缩放过的 image 层，后续可以做成先缓存当前的缩放和移动状态
@@ -152,6 +159,7 @@ class ImageMarker extends Event {
    * 更改当前的 image 层并清除 draw 层所有路径
    * @param url 导入的图片信息
    * @param paths 导入 paths 信息，也可以选择不导入，那就开始新的绘制
+   * @memberof ImageMarker
    */
   public importImage(url: string, paths?: T.IPath[]) {
     this.imageCa.reloadImage(url).then(() => {
@@ -162,6 +170,7 @@ class ImageMarker extends Event {
   }
   /**
    * 销毁当前创建的画布
+   * @memberof ImageMarker
    */
   public destroy() {
     this.imageCa && this.imageCa.destroy();
@@ -199,6 +208,7 @@ class ImageMarker extends Event {
 
   /**
    * 挂载用户自定义的 hooks
+   * @memberof ImageMarker
    */
   private _mountEvents() {
     const hooks: any = this.hooks;
